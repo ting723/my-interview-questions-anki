@@ -1,6 +1,6 @@
 # mysql
 
-## 常见的 SQL 优化方式
+## MYSQL优化方式
 
 <!-- notecardId: 1735053587141 -->
 
