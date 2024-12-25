@@ -1,4 +1,4 @@
-# 并发HashMap
+# 并发 HashMap
 
 ## Java8 ConcurrentHashMap
 
@@ -11,21 +11,44 @@
 Java 8 中的 `ConcurrentHashMap` 采用了分段锁和 CAS 操作来实现高效并发。主要特点包括：
 
 1. 数据结构
-在 Java 8 中，ConcurrentHashMap 主要由以下几个部分组成：
-    - Node 数组：ConcurrentHashMap 的底层是一个 Node<K,V>[] 数组，每个元素是一个链表或红黑树的头节点。
-    - Node 节点：每个 Node 包含一个键值对和一个指向下一个节点的引用。
-    - TreeNode 节点：当链表长度超过一定阈值（默认是 8）时，链表会转换为红黑树，Node 节点会变成 TreeNode 节点。
+   在 Java 8 中，ConcurrentHashMap 主要由以下几个部分组成： - Node 数组：ConcurrentHashMap 的底层是一个 Node<K,V>[] 数组，每个元素是一个链表或红黑树的头节点。 - Node 节点：每个 Node 包含一个键值对和一个指向下一个节点的引用。 - TreeNode 节点：当链表长度超过一定阈值（默认是 8）时，链表会转换为红黑树，Node 节点会变成 TreeNode 节点。
 2. CAS 操作
-CAS（Compare-And-Swap）是一种无锁的并发编程技术，用于实现原子操作。ConcurrentHashMap 使用 CAS 操作来保证并发安全，减少锁的使用。例如，在插入新节点时，会使用 CAS 操作来确保只有一个线程能够成功插入。
+   CAS（Compare-And-Swap）是一种无锁的并发编程技术，用于实现原子操作。ConcurrentHashMap 使用 CAS 操作来保证并发安全，减少锁的使用。例如，在插入新节点时，会使用 CAS 操作来确保只有一个线程能够成功插入。
 
 3. 分段锁
-虽然 Java 8 中取消了 Segment，但仍然通过分段锁机制来减少锁的粒度。具体实现是通过对每个桶（bucket）进行加锁，而不是对整个 ConcurrentHashMap 加锁，从而提高并发性能。
+   虽然 Java 8 中取消了 Segment，但仍然通过分段锁机制来减少锁的粒度。具体实现是通过对每个桶（bucket）进行加锁，而不是对整个 ConcurrentHashMap 加锁，从而提高并发性能。
 
 4. 红黑树
-当链表长度超过一定阈值（默认是 8）时，链表会转换为红黑树。红黑树是一种自平衡二叉搜索树，能够在 O(log n) 时间内完成插入、删除和查找操作，从而提高查询效率。
+   当链表长度超过一定阈值（默认是 8）时，链表会转换为红黑树。红黑树是一种自平衡二叉搜索树，能够在 O(log n) 时间内完成插入、删除和查找操作，从而提高查询效率。
 
 5. 扩容机制
-ConcurrentHashMap 的扩容机制也进行了优化。扩容时，采用分段扩容的方式，即每次只扩容一个桶，减少扩容时的性能开销。
+   ConcurrentHashMap 的扩容机制也进行了优化。扩容时，采用分段扩容的方式，即每次只扩容一个桶，减少扩容时的性能开销。
+
+### 锁的实现
+
+在 `ConcurrentHashMap` 中，锁的实现主要依赖于 CAS 操作和内置的同步机制。具体来说：
+
+- **CAS 操作**：通过 `Unsafe` 类提供的 `compareAndSwap` 方法来实现无锁操作，保证原子性。
+- **内置锁**：在某些情况下，仍然需要使用 `synchronized` 关键字来保证线程安全，例如在链表或红黑树的插入和删除操作中。
+
+### get 方法的实现细节
+
+`ConcurrentHashMap` 的 `get` 方法是无锁的，具体步骤如下：
+
+1. **定位桶**：根据键的 `hashCode` 计算出桶的位置。
+2. **遍历链表或红黑树**：在对应的桶中，遍历链表或红黑树，查找匹配的键。
+3. **返回值**：如果找到匹配的键，返回对应的值；否则返回 `null`。
+
+### put 方法的实现细节
+
+`ConcurrentHashMap` 的 `put` 方法使用了 CAS 操作和内置锁，具体步骤如下：
+
+1. **定位桶**：根据键的 `hashCode` 计算出桶的位置。
+2. **CAS 插入**：如果桶为空，使用 CAS 操作插入新节点。
+3. **遍历链表或红黑树**：如果桶不为空，遍历链表或红黑树，查找匹配的键。
+   - **更新值**：如果找到匹配的键，更新对应的值。
+   - **插入新节点**：如果未找到匹配的键，插入新节点到链表或红黑树中。
+4. **扩容检查**：插入新节点后，检查是否需要扩容，如果需要则进行分段扩容。
 
 ### 改进
 
@@ -37,12 +60,17 @@ ConcurrentHashMap 的扩容机制也进行了优化。扩容时，采用分段�
 
 ### 常见面试题
 
->**Q: ConcurrentHashMap 的实现原理是什么？**
-A: 采用分段锁和 CAS 操作来实现高效并发，使用红黑树优化查询性能。
->**Q: Java 8 中 ConcurrentHashMap 相比 Java 7 有哪些改进？**
-A: 取消了 Segment，改为使用 Node 数组和 CAS 操作；引入红黑树；优化扩容机制。
->**Q: ConcurrentHashMap 如何保证线程安全？**
-A: 通过 CAS 操作和分段锁机制来保证线程安全。
+> **Q: ConcurrentHashMap 的实现原理是什么？**
+
+- A: 采用分段锁和 CAS 操作来实现高效并发，使用红黑树优化查询性能。
+
+> **Q: Java 8 中 ConcurrentHashMap 相比 Java 7 有哪些改进？**
+
+- A: 取消了 Segment，改为使用 Node 数组和 CAS 操作；引入红黑树；优化扩容机制。
+
+> **Q: ConcurrentHashMap 如何保证线程安全？**
+
+- A: 通过 CAS 操作和分段锁机制来保证线程安全。
 
 ### 应用场景
 
