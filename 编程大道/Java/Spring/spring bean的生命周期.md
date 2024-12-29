@@ -30,4 +30,22 @@ Spring Bean 的生命周期包括以下几个阶段：
    - 如果 Bean 实现了`DisposableBean`接口，Spring 将调用`destroy`方法。
    - 如果 Bean 在配置文件中通过`<bean>`元素的`destroy-method`属性指定了销毁方法，Spring 将调用该方法。
 
-通过这些阶段，Spring 容器能够管理 Bean 的整个生命周期，从创建到销毁。
+> 通过这些阶段，Spring 容器能够管理 Bean 的整个生命周期，从创建到销毁。
+
+### Bean 生命周期
+
+> 指定的就是 Bean 从创建到销毁的整个过程：
+
+1. 实例化
+   - 通过反射去推断构造函数进行实例化
+   - 实例工厂、静态工厂
+2. 属性赋值
+   - 解析自动装配（ByName、ByType、Constractor、none、@Autowired）DI 的体现
+   - 循环依赖
+3. 初始化
+   - 调用 xXXAware 回调方法
+   - 调用初始化生命周期回调(三种）
+   - 如果 bean 实现 aop 创建动态代理
+4. 销毁
+   - 在 spring 容器关闭的时候进行调用
+   - 调用销毁生命周期回调
