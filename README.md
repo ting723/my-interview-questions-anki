@@ -1,6 +1,8 @@
 # my-interview-questions-anki
 
-> 个人面试八股文 
+## 技术
+
+> 个人面试八股文
 
 ### 语言层面
 
@@ -23,7 +25,7 @@
 
 ### 框架
 
-- spring全家桶
-- gin框架
+- spring 全家桶
+- gin 框架
 - vue
 - mybatis
